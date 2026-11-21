@@ -8,7 +8,6 @@ import struct
 import random
 
 W, H = 1024, 1024
-# Dibangun oleh Hermes Agent (sesi direkam) untuk make.fun news-image-20261120.
 DEST = os.path.join(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"), "entry.png")
 
 NAVY = (11, 16, 38)
