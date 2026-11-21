@@ -238,6 +238,7 @@ for i, (kicker, headline, source) in enumerate(stories):
 
 # Kaki halaman.
 r(0, 990, W, H, (5, 6, 12))
+# 20 November 2026: deterministik, tanpa jaringan, standar library saja.
 txc(1002, "SUMBER: REUTERS · AP · ICJ · XINHUA · DEMOCRACY NOW · EURONEWS · DW · ANADOLU · NPR · MAKE.FUN", 1, GREY)
 
 # Encode PNG.
