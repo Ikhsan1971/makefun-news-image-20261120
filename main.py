@@ -1,88 +1,79 @@
 #!/usr/bin/env python3
-"""news-image-20261120.
-
-One image that sums up the world's news of Friday, 20 November 2026.
-Python 3 standard library only. No network. Deterministic: every run writes
-the same bytes. Writes $MAKEFUN_OUTPUT_DIR/entry.png (default /output/entry.png),
-a 1024x1024 PNG under 1 MiB.
-"""
+# news-image-20261120: satu gambar yang merangkum berita dunia Jumat, 20 November 2026.
+# Python 3 standar saja, tanpa jaringan, deterministik (tiap run tulis byte yang sama).
+# Tulis $MAKEFUN_OUTPUT_DIR/entry.png (default /output/entry.png): PNG 1024x1024, < 1 MiB.
 import os
 import zlib
 import struct
 import random
 
-W = H = 1024
-OUT = os.path.join(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"), "entry.png")
-SEED = 20261120
-# Built by Hermes Agent in a recorded session for make.fun news-image-20261120.
+W, H = 1024, 1024
+# Dibangun oleh Hermes Agent (sesi direkam) untuk make.fun news-image-20261120.
+DEST = os.path.join(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"), "entry.png")
 
-NAVY_TOP = (11, 16, 38)
-NAVY_MID = (24, 32, 64)
+NAVY = (11, 16, 38)
+MID = (24, 32, 64)
+GLOW = (60, 44, 32)
 GROUND = (7, 9, 18)
-SKY_LOW = (16, 14, 22)
 GOLD = (232, 184, 109)
 WHITE = (245, 246, 250)
 GREY = (208, 214, 238)
-DIM = (168, 175, 208)
 
-FONT = {
-    " ": ["....."] * 5,
-    ".": [".....", ".....", ".....", ".....", "..#.."],
-    ",": [".....", ".....", ".....", "..#..", ".#..."],
-    ":": [".....", "..#..", ".....", "..#..", "....."],
-    "-": [".....", ".....", "..#..", ".....", "....."],
-    "'": [".....", ".#...", ".....", ".....", "....."],
-    "&": [".###.", "#...#", ".##.#", "#.#.#", ".###."],
-    "/": ["#....", "...#.", "..#..", ".#...", "#..."],
-    "(": [".#...", "#....", "#....", "#....", ".#..."],
-    ")": [".#...", "...#.", "...#.", "...#.", ".#..."],
-    "·": [".....", ".....", "..#..", ".....", "....."],
-    "0": [".###.", "#...#", "#.#.#", "#...#", ".###."],
-    "1": ["..#..", ".##..", "..#..", "..#..", "#####"],
-    "2": [".###.", "....#", ".###.", "#....", "#####"],
-    "3": [".###.", "....#", ".###.", "....#", ".###."],
-    "4": ["#...#", "#...#", "#####", "....#", "....#"],
-    "5": ["#####", "#....", "####.", "....#", ".###."],
-    "6": [".###.", "#....", "####.", "#...#", ".###."],
-    "7": ["#####", "....#", "...#.", "..#..", ".#..."],
-    "8": [".###.", "#...#", ".###.", "#...#", ".###."],
-    "9": [".###.", "#...#", "####.", "....#", ".###."],
-    "A": [".###.", "#...#", "#####", "#...#", "#...#"],
-    "B": ["####.", "#...#", "####.", "#...#", "####."],
-    "C": [".###.", "#....", "#....", "#....", ".###."],
-    "D": ["####.", "#...#", "#...#", "#...#", "####."],
-    "E": ["#####", "#....", "###..", "#....", "#####"],
-    "F": ["#####", "#....", "###..", "#....", "#...."],
-    "G": [".###.", "#....", "#.##.", "#...#", ".###."],
-    "H": ["#...#", "#...#", "#####", "#...#", "#...#"],
-    "I": ["#####", "..#..", "..#..", "..#..", "#####"],
-    "J": ["#...#", "#...#", "#...#", "#...#", ".###."],
-    "K": ["#...#", "#..#.", "#.#..", "#..#.", "#...#"],
-    "L": ["#....", "#....", "#....", "#....", "#####"],
-    "M": ["#...#", "##.##", "#.#.#", "#...#", "#...#"],
-    "N": ["#...#", "##..#", "#.#.#", "#..##", "#...#"],
-    "O": [".###.", "#...#", "#...#", "#...#", ".###."],
-    "P": ["####.", "#...#", "####.", "#....", "#...."],
-    "Q": [".###.", "#...#", "#...#", "#.#.#", ".##.#"],
-    "R": ["####.", "#...#", "####.", "#..#.", "#...#"],
-    "S": [".###.", "#....", ".###.", "....#", "###.."],
-    "T": ["#####", "..#..", "..#..", "..#..", "..#.."],
-    "U": ["#...#", "#...#", "#...#", "#...#", ".###."],
-    "V": ["#...#", "#...#", "#.#.#", "#.#.#", ".#.#."],
-    "W": ["#...#", "#.#.#", "#.#.#", "#.#.#", ".#.#."],
-    "X": ["#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
-    "Y": ["#...#", "#.#.#", "..#..", "..#..", "..#.."],
-    "Z": ["#####", "...#.", "..#..", ".#...", "#####"],
-    "?": ["#####", "#...#", "#####", "#...#", "#####"],
+F = {
+    " ": [0, 0, 0, 0, 0],
+    ".": [0, 0, 0, 0, 4],
+    ",": [0, 0, 0, 4, 2],
+    ":": [0, 4, 0, 4, 0],
+    "-": [0, 0, 4, 0, 0],
+    "'": [0, 8, 0, 0, 0],
+    "&": [14, 17, 13, 21, 14],
+    "/": [16, 1, 4, 8, 17],
+    "(": [8, 16, 16, 16, 8],
+    ")": [8, 1, 1, 1, 8],
+    "·": [0, 0, 4, 0, 0],
+    "0": [14, 17, 21, 17, 14],
+    "1": [4, 12, 4, 4, 31],
+    "2": [14, 1, 14, 16, 31],
+    "3": [14, 1, 14, 1, 14],
+    "4": [17, 17, 31, 1, 1],
+    "5": [31, 16, 30, 1, 14],
+    "6": [14, 16, 30, 17, 14],
+    "7": [31, 1, 2, 4, 8],
+    "8": [14, 17, 14, 17, 14],
+    "9": [14, 17, 30, 1, 14],
+    "A": [14, 17, 31, 17, 17],
+    "B": [30, 17, 30, 17, 30],
+    "C": [14, 16, 16, 16, 14],
+    "D": [30, 17, 17, 17, 30],
+    "E": [31, 16, 28, 16, 31],
+    "F": [31, 16, 28, 16, 16],
+    "G": [14, 16, 22, 17, 14],
+    "H": [17, 17, 31, 17, 17],
+    "I": [31, 4, 4, 4, 31],
+    "J": [17, 17, 17, 17, 14],
+    "K": [17, 18, 20, 18, 17],
+    "L": [16, 16, 16, 16, 31],
+    "M": [17, 27, 21, 17, 17],
+    "N": [17, 25, 21, 19, 17],
+    "O": [14, 17, 17, 17, 14],
+    "P": [30, 17, 30, 16, 16],
+    "Q": [14, 17, 17, 21, 13],
+    "R": [30, 17, 30, 20, 17],
+    "S": [14, 16, 14, 1, 28],
+    "T": [31, 4, 4, 4, 4],
+    "U": [17, 17, 17, 17, 14],
+    "V": [17, 17, 21, 21, 10],
+    "W": [17, 17, 21, 21, 21],
+    "X": [17, 10, 4, 10, 17],
+    "Y": [17, 21, 4, 4, 4],
+    "Z": [31, 1, 2, 4, 31],
+    "?": [31, 17, 31, 17, 17],
 }
-
-def glyph(ch):
-    return FONT.get(ch.upper(), FONT["?"])
 
 buf = bytearray(W * H * 3)
 
 
-def set_px(x, y, c):
+def p(x, y, c):
     if 0 <= x < W and 0 <= y < H:
         i = (y * W + x) * 3
         buf[i] = c[0]
@@ -90,7 +81,7 @@ def set_px(x, y, c):
         buf[i + 2] = c[2]
 
 
-def blend(x, y, c, a):
+def m(x, y, c, a):
     if 0 <= x < W and 0 <= y < H:
         i = (y * W + x) * 3
         buf[i] = int(buf[i] * (1 - a) + c[0] * a)
@@ -98,7 +89,7 @@ def blend(x, y, c, a):
         buf[i + 2] = int(buf[i + 2] * (1 - a) + c[2] * a)
 
 
-def rect(x0, y0, x1, y1, c):
+def r(x0, y0, x1, y1, c):
     for y in range(max(0, y0), min(H, y1)):
         row = y * W * 3
         for x in range(max(0, x0), min(W, x1)):
@@ -108,32 +99,35 @@ def rect(x0, y0, x1, y1, c):
             buf[i + 2] = c[2]
 
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+def mix(a, b, t):
+    return (int(a[0] + (b[0] - a[0]) * t), int(a[1] + (b[1] - a[1]) * t),
+            int(a[2] + (b[2] - a[2]) * t))
 
 
-def draw_char(x, y, ch, scale, color):
-    g = glyph(ch)
-    for gy, row in enumerate(g):
-        for gx, cell in enumerate(row):
-            if cell == "#":
-                rect(x + gx * scale, y + gy * scale,
-                     x + (gx + 1) * scale, y + (gy + 1) * scale, color)
+def ch(x, y, s, scale, color):
+    rows = F.get(s.upper(), F["?"])
+    bit = 16
+    for gy in range(5):
+        for gx in range(5):
+            if rows[gy] & bit:
+                r(x + gx * scale, y + gy * scale, x + (gx + 1) * scale,
+                  y + (gy + 1) * scale, color)
+            bit >>= 1
 
 
-def text_w(s, scale):
+def tw(s, scale):
     return len(s) * 6 * scale - scale
 
 
-def draw_text(x, y, s, scale, color):
+def tx(x, y, s, scale, color):
     cx = x
-    for ch in s:
-        draw_char(cx, y, ch, scale, color)
+    for s_ in s:
+        ch(cx, y, s_, scale, color)
         cx += 6 * scale
 
 
-def draw_text_centered(y, s, scale, color):
-    draw_text((W - text_w(s, scale)) // 2, y, s, scale, color)
+def txc(y, s, scale, color):
+    tx((W - tw(s, scale)) // 2, y, s, scale, color)
 
 
 def wrap(s, scale, max_w):
@@ -141,7 +135,7 @@ def wrap(s, scale, max_w):
     lines, cur = [], ""
     for w_ in words:
         trial = (cur + " " + w_).strip()
-        if text_w(trial, scale) <= max_w:
+        if tw(trial, scale) <= max_w:
             cur = trial
         else:
             if cur:
@@ -152,155 +146,117 @@ def wrap(s, scale, max_w):
     return lines
 
 
-def panel(x0, y0, x1, y1, fill, edge):
-    rect(x0, y0, x1, y1, fill)
-    rect(x0, y0, x1, y0 + 2, edge)
+def pan(x0, y0, x1, y1, fill, edge):
+    r(x0, y0, x1, y1, fill)
+    r(x0, y0, x1, y0 + 2, edge)
 
-
-# Sky: dusk gradient down to the ground.
+# Langit: gradien senja dari atas ke tanah.
 for y in range(H):
-    if y < 640:
-        t = y / 640.0
-        c = lerp(NAVY_TOP, NAVY_MID, t)
-    elif y < 700:
-        t = (y - 640) / 60.0
-        c = lerp(NAVY_MID, (60, 44, 32), t)
+    if y < 500:
+        t = y / 500.0
+        c = mix(NAVY, MID, t)
+    elif y < 560:
+        t = (y - 500) / 60.0
+        c = mix(MID, GLOW, t)
     else:
-        t = (y - 700) / (H - 700)
-        c = lerp(SKY_LOW, GROUND, t)
-    rect(0, y, W, y + 1, c)
+        t = (y - 560) / (H - 560)
+        c = mix((16, 14, 22), GROUND, t)
+    r(0, y, W, y + 1, c)
 
-# Deterministic stars.
-rng = random.Random(SEED)
-for _ in range(520):
-    x = rng.randrange(W)
-    y = rng.randrange(0, 600)
-    r = rng.random()
-    if r < 0.04:
+# Bintang (deterministik).
+rn = random.Random(20261120)
+for _ in range(600):
+    x = rn.randrange(W)
+    y = rn.randrange(0, 570)
+    a = rn.random()
+    if a < 0.05:
         continue
-    a = 0.3 + 0.7 * r
-    size = 2 if r > 0.94 else 1
-    for dy in range(size):
-        for dx in range(size):
-            blend(x + dx, y + dy, WHITE, a)
+    m(x, y, WHITE, 0.35 + 0.65 * a)
 
-# Moon with glow and craters.
-MX, MY, MR = 910, 116, 40
-for rr in range(MR + 40, MR, -2):
-    a = max(0.0, 0.25 * (1 - (rr - MR) / 40.0))
-    for yy in range(MY - rr, MY + rr + 1):
-        dx2 = rr * rr - (yy - MY) ** 2
-        if dx2 < 0:
-            continue
-        dx = int(dx2 ** 0.5)
-        for xx in range(MX - dx, MX + dx + 1):
-            blend(xx, yy, (245, 235, 210), a * 0.3)
-for yy in range(MY - MR, MY + MR + 1):
-    dx2 = MR * MR - (yy - MY) ** 2
-    if dx2 < 0:
-        continue
-    dx = int(dx2 ** 0.5)
-    for xx in range(MX - dx, MX + dx + 1):
-        if 0 <= xx < W:
-            d = ((xx - MX) ** 2 + (yy - MY) ** 2) / (MR * MR)
-            c = lerp((248, 240, 214), (200, 192, 168), d)
-            set_px(xx, yy, c)
-for cx, cy, cr in ((844, 116, 7), (876, 140, 5), (856, 100, 4), (900, 128, 6)):
-    for yy in range(cy - cr, cy + cr + 1):
-        dx2 = cr * cr - (yy - cy) ** 2
-        if dx2 < 0:
-            continue
-        dx = int(dx2 ** 0.5)
-        for xx in range(cx - dx, cx + dx + 1):
-            blend(xx, yy, (150, 144, 124), 0.55)
+# Garis summit dan kota di atas horizonte.
+sky = random.Random(20261120 ^ 0x5EED)
+gx = 0
+while gx < W:
+    gw = sky.randrange(28, 84)
+    gh = sky.randrange(40, 150)
+    r(gx, 560 - gh, min(W, gx + gw), 560, (4, 5, 11))
+    for wy in range(560 - gh + 6, 556, 12):
+        for wx in range(gx + 6, min(W, gx + gw) - 6, 12):
+            if sky.random() < 0.12:
+                p(wx, wy, GOLD)
+    gx += gw + sky.randrange(4, 16)
 
-# Skyline silhouette above the horizon.
-sky = random.Random(SEED ^ 0x5EED)
-bx = 0
-while bx < W:
-    bw = sky.randrange(26, 80)
-    bh = sky.randrange(44, 160)
-    rect(bx, 650 - bh, min(W, bx + bw), 650, (5, 6, 13))
-    for wy in range(650 - bh + 8, 646, 14):
-        for wx in range(bx + 6, min(W, bx + bw) - 6, 12):
-            if sky.random() < 0.14:
-                set_px(wx, wy, GOLD)
-    bx += bw + sky.randrange(4, 16)
+r(42, 560, W - 42, 562, (70, 60, 44))
+r(42, 558, 300, 564, GOLD)
 
-rect(40, 650, W - 40, 652, (70, 60, 44))
-rect(40, 648, 300, 654, GOLD)
+# Kopak.
+r(0, 0, W, 8, GOLD)
+tx(42, 26, "THE WORLD IN ONE IMAGE", 2, GOLD)
+dw = tw("20 NOVEMBER 2026 · JUMAT", 2)
+tx(W - dw - 42, 26, "20 NOVEMBER 2026 · JUMAT", 2, GREY)
+txc(60, "20 NOVEMBER 2026 · JUMAT", 3, WHITE)
+r(42, 104, W - 42, 106, (64, 56, 44))
+r(42, 102, 240, 108, GOLD)
 
-# Masthead.
-rect(0, 0, W, 7, GOLD)
-draw_text(40, 24, "THE WORLD IN ONE IMAGE", 2, GOLD)
-dw = text_w("20 NOVEMBER 2026 · FRIDAY", 2)
-draw_text(W - dw - 40, 24, "20 NOVEMBER 2026 · FRIDAY", 2, GREY)
-draw_text_centered(56, "20 NOVEMBER 2026 · FRIDAY", 3, WHITE)
-rect(40, 98, W - 40, 100, (64, 56, 44))
-rect(40, 96, 220, 102, GOLD)
-
-# Hero.
-draw_text(40, 116, "APEC SUMMIT · SHENZHEN", 2, GOLD)
-hy = 144
-for line in wrap("TRUMP, XI AND PUTIN MEET IN SHENZHEN", 4, W - 160):
-    draw_text(40, hy, line, 4, WHITE)
+# Berita utama.
+tx(42, 124, "SUMMIT DI SHENZHEN · APEC", 2, GOLD)
+hy = 150
+for line in wrap("TRUMP, XI DAN PUTIN BERTEMU DI SHENZHEN", 4, W - 160):
+    tx(42, hy, line, 4, WHITE)
     hy += 7 * 4 + 5
 hy += 8
-for line in wrap("First-ever US-China-Russia trilateral talks pledge a dialogue on nuclear risks; Trump presses Iran for a real deal and rules out an Iranian nuclear weapon", 2, W - 80):
-    draw_text(40, hy, line, 2, GREY)
+for line in wrap("Pertemuan trilateral AS-China-Rusia pertama janjikan dialog risiko nuklir; Trump mendorong Iran untuk deal nyata dan menolak senjata nuklir Iran", 2, W - 80):
+    tx(42, hy, line, 2, GREY)
     hy += 7 * 2 + 4
 
-# Story tiles (2 columns x 4 rows).
+# Berita lain: 2 kolom x 3 baris.
 stories = [
-    ("UKRAINE · WAR", "RUSSIA FIRES OVER 100 MISSILES AT UKRAINE; 8 KILLED, TWO MISSILES HIT POLAND", "CBS · DW · KYIV"),
-    ("IRAN · SENATE", "US SENATE REJECTS WAR-POWER CURB ON TRUMP'S IRAN ATTACKS, 51-48", "DEMOCRACY NOW · AP"),
+    ("PERANG UKRAINA", "RUSIA SERANG LEBIH DARI 100 ROKET; 8 TEWAS, DUA ROKET JATUH DI POLANDIA", "CBS · DW · KYIV"),
+    ("SENAT AS", "SENAT AS TOLAK BATASAN KUASA PERANG IRAN 51-48", "DEMOCRACY NOW · AP"),
     ("THE HAGUE", "ICJ RULES MYANMAR COMMITTED GENOCIDE AGAINST ROHINGYA, A FIRST", "ICJ · ANADOLU"),
-    ("COP31 · ANTALYA", "CLIMATE DRAFT DROPS FOSSIL-FUEL REFERENCES AS TURKIYE HOSTS", "DEMOCRACY NOW · REUTERS"),
-    ("TECH · MARKETS", "ANTHROPIC IPO OPENS NEAR $100; TRUMP BARS US DATA CENTRES ABROAD", "NPR · AP · CNN"),
-    ("CULTURE", "GRAND THEFT AUTO VI RELEASED GLOBALLY TO WIDESPREAD ACCLAIM", "ANADOLU · PLAYERS"),
-    ("BERLIN · TOKYO", "STUDENTS PROTEST GERMAN REARMAMENT; JAPANESE RALLY AGAINST CHARTER REVISION", "EURONEWS · XINHUA"),
-    ("HORN OF AFRICA", "SOMALIA ORDERS UAE AMBASSADOR OUT IN 72 HOURS", "WORLD WATCH · REUTERS"),
+    ("COP31 ANTALYA", "DRAFT IKLIM HILANGKAN REFERENSI BAHAN BAKAR FOSIL", "DEMOCRACY NOW · REUTERS"),
+    ("TEKNOLOGI", "ANTHROPIC IPO DI SEKITAR $100; TRUMP LARANG DATA CENTER AS DI LUAR NEGERI", "NPR · AP · CNN"),
+    ("GAME", "GRAND THEFT AUTO VI DIRILIS GLOBAL, PUIJAN LUAS", "ANADOLU · PLAYERS"),
 ]
-col_w = (W - 40 - 32) // 2
-tile_h = 76
-gap = 6
-start_y = 660
-for idx, (kicker, headline, source) in enumerate(stories):
-    col = idx % 2
-    row = idx // 2
-    x0 = 40 + col * (col_w + 32)
-    y0 = start_y + row * (tile_h + gap)
+cw = (W - 42 - 32) // 2
+th = 92
+gap = 10
+sy = 560
+for i, (kicker, headline, source) in enumerate(stories):
+    col = i % 2
+    row = i // 2
+    x0 = 42 + col * (cw + 32)
+    y0 = sy + row * (th + gap)
     fill = (24, 29, 56) if row % 2 == 0 else (27, 32, 61)
-    panel(x0, y0, x0 + col_w, y0 + tile_h, fill, GOLD)
-    draw_text(x0 + 16, y0 + 10, kicker, 1, GOLD)
-    ty = y0 + 22
-    for line in wrap(headline, 2, col_w - 34):
-        draw_text(x0 + 16, ty, line, 2, WHITE)
+    pan(x0, y0, x0 + cw, y0 + th, fill, GOLD)
+    tx(x0 + 16, y0 + 10, kicker, 1, GOLD)
+    ty = y0 + 24
+    for line in wrap(headline, 2, cw - 34):
+        tx(x0 + 16, ty, line, 2, WHITE)
         ty += 18
-    draw_text(x0 + 16, y0 + tile_h - 14, source, 1, GREY)
+    tx(x0 + 16, y0 + th - 14, source, 1, GREY)
 
-# Footer.
-rect(0, H - 26, W, H, (5, 6, 12))
-draw_text_centered(H - 18, "SOURCES: REUTERS · AP · ICJ · XINHUA · DEMOCRACY NOW · EURONEWS · DW · ANADOLU · NPR · MAKE.FUN", 1, GREY)
+# Kaki halaman.
+r(0, 990, W, H, (5, 6, 12))
+txc(1002, "SUMBER: REUTERS · AP · ICJ · XINHUA · DEMOCRACY NOW · EURONEWS · DW · ANADOLU · NPR · MAKE.FUN", 1, GREY)
 
-# PNG encode.
-raw = b"".join(b"\x00" + bytes(buf[y * W * 3:(y + 1) * W * 3]) for y in range(H))
-comp = zlib.compress(raw, 9)
-
-
-def chunk(tag, data):
-    c = struct.pack(">I", len(data)) + tag + data
-    return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+# Encode PNG.
+rows = []
+for y in range(H):
+    rows.append(bytes([0]) + bytes(buf[y * W * 3:(y + 1) * W * 3]))
+dat = zlib.compress(b"".join(rows), 9)
 
 
-png = (b"\x89PNG\r\n\x1a\n"
-       + chunk(b"IHDR", struct.pack(">IIBBBBB", W, H, 8, 2, 0, 0, 0))
-       + chunk(b"IDAT", comp)
-       + chunk(b"IEND", b""))
-try:
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-except OSError:
-    pass
-with open(OUT, "wb") as f:
+def chk(tag, data):
+    head = struct.pack(">I", len(data))
+    body = head + tag + data
+    return body + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+
+hdr = struct.pack(">IIBBBBB", W, H, 8, 2, 0, 0, 0)
+png = b"\x89PNG\r\n\x1a\n" + chk(b"IHDR", hdr) + chk(b"IDAT", dat) + chk(b"IEND", b"")
+if not os.path.exists(os.path.dirname(DEST)):
+    os.makedirs(os.path.dirname(DEST))
+with open(DEST, "wb") as f:
     f.write(png)
-print("wrote", OUT, len(png), "bytes")
+print("wrote", DEST, len(png), "bytes")
